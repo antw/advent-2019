@@ -25,7 +25,6 @@ fn check_password(range: std::ops::Range<i32>) -> (i32, i32) {
     let mut doubles = 0;
     let mut doubles_exact = 0;
 
-    // Lowest starting digit is 3. Therefore all numbers must be greater than 3.
     for number in range {
         let digits = number_to_vec(number);
 
