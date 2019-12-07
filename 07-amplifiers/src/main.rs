@@ -159,7 +159,6 @@ struct Program {
     opcodes: Vec<i64>,
     pointer: usize,
     inputs: VecDeque<i64>,
-    outputs: Vec<i64>,
 }
 
 impl Program {
@@ -168,7 +167,6 @@ impl Program {
             opcodes,
             pointer: 0,
             inputs: VecDeque::new(),
-            outputs: Vec::new(),
         }
     }
 
@@ -201,6 +199,18 @@ impl Program {
     fn next(&self) -> Option<InstructionWithMode> {
         if self.pointer < self.opcodes.len() {
             return Some(InstructionWithMode::from_intcode(self.read(self.pointer)));
+        }
+
+        None
+    }
+
+    /// Returns the instruction type which will be executed after the current one without moving the
+    /// program pointer.
+    fn peek(&self) -> Option<InstructionWithMode> {
+        let next_address = self.pointer + self.next().unwrap().size();
+
+        if next_address < self.opcodes.len() {
+            return Some(InstructionWithMode::from_intcode(self.read(next_address)));
         }
 
         None
@@ -273,7 +283,11 @@ impl Program {
 
                     self.jump_forward(instruction.jump_size());
 
-                    return ProgramState::Output(value);
+                    // Peek should always be Some. It may be an Exit instruction.
+                    return match self.peek().unwrap().instruction {
+                        Instruction::Exit => ProgramState::Halt(Some(value)),
+                        _ => ProgramState::Output(value),
+                    };
                 }
                 Instruction::JumpIfTrue => {
                     let (condition, value) = self.take_two_params(&instruction);
@@ -317,10 +331,7 @@ impl Program {
             self.jump_forward(instruction.jump_size());
         }
 
-        match self.outputs.last() {
-            Some(value) => ProgramState::Halt(Some(*value)),
-            None => ProgramState::Halt(None),
-        }
+        ProgramState::Halt(None)
     }
 }
 
@@ -351,10 +362,9 @@ fn non_feedback_amplifier_power(intcodes: &Vec<i64>, settings: Vec<i64>) -> i64 
         amplifier.push_input(*input);
         amplifier.push_input(last_output);
 
-        // In part one the program exits when it generates output. It won't actually reach the
-        // ProgramState::Halt.
         match amplifier.run() {
-            ProgramState::Halt(_) => panic!("Unexpected Halt in part one"),
+            ProgramState::Halt(Some(value)) => last_output = value,
+            ProgramState::Halt(None) => panic!("Unexpected Halt without value in part 1"),
             ProgramState::Output(value) => last_output = value,
         }
     }
@@ -523,12 +533,12 @@ mod tests {
         let mut program = Program::new(intcodes.clone());
         program.push_input(8);
 
-        assert_eq!(program.run(), ProgramState::Output(1));
+        assert_eq!(program.run(), ProgramState::Halt(Some(1)));
 
         let mut program = Program::new(intcodes.clone());
         program.push_input(7);
 
-        assert_eq!(program.run(), ProgramState::Output(0));
+        assert_eq!(program.run(), ProgramState::Halt(Some(0)));
     }
 
     #[test]
@@ -539,12 +549,12 @@ mod tests {
         let mut program = Program::new(intcodes.clone());
         program.push_input(7);
 
-        assert_eq!(program.run(), ProgramState::Output(1));
+        assert_eq!(program.run(), ProgramState::Halt(Some(1)));
 
         let mut program = Program::new(intcodes.clone());
         program.push_input(8);
 
-        assert_eq!(program.run(), ProgramState::Output(0));
+        assert_eq!(program.run(), ProgramState::Halt(Some(0)));
     }
 
     #[test]
@@ -555,12 +565,12 @@ mod tests {
         let mut program = Program::new(intcodes.clone());
         program.push_input(8);
 
-        assert_eq!(program.run(), ProgramState::Output(1));
+        assert_eq!(program.run(), ProgramState::Halt(Some(1)));
 
         let mut program = Program::new(intcodes.clone());
         program.push_input(7);
 
-        assert_eq!(program.run(), ProgramState::Output(0));
+        assert_eq!(program.run(), ProgramState::Halt(Some(0)));
     }
 
     #[test]
@@ -571,12 +581,12 @@ mod tests {
         let mut program = Program::new(intcodes.clone());
         program.push_input(7);
 
-        assert_eq!(program.run(), ProgramState::Output(1));
+        assert_eq!(program.run(), ProgramState::Halt(Some(1)));
 
         let mut program = Program::new(intcodes.clone());
         program.push_input(8);
 
-        assert_eq!(program.run(), ProgramState::Output(0));
+        assert_eq!(program.run(), ProgramState::Halt(Some(0)));
     }
 
     #[test]
