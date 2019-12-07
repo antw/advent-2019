@@ -393,9 +393,7 @@ fn feedback_amplifier_power(intcodes: &Vec<i64>, settings: Vec<i64>) -> i64 {
 
         match amplifier.run() {
             ProgramState::Halt(value) => {
-                if value.is_some() {
-                    last_output = value.unwrap();
-                }
+                last_output = value.unwrap_or(last_output);
             }
             ProgramState::Output(value) => {
                 last_output = value;
