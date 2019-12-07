@@ -85,7 +85,7 @@ impl Instruction {
             Instruction::JumpIfFalse => 3,
             Instruction::LessThan => 4,
             Instruction::Equal => 4,
-            Instruction::Exit => 0,
+            Instruction::Exit => 1,
         }
     }
 
@@ -204,18 +204,6 @@ impl Program {
         None
     }
 
-    /// Returns the instruction type which will be executed after the current one without moving the
-    /// program pointer.
-    fn peek(&self) -> Option<InstructionWithMode> {
-        let next_address = self.pointer + self.next().unwrap().size();
-
-        if next_address < self.opcodes.len() {
-            return Some(InstructionWithMode::from_intcode(self.read(next_address)));
-        }
-
-        None
-    }
-
     /// Takes a single parameter from the program memory. This paramter is always a memory position.
     fn take_one_param(&self, instruction: &InstructionWithMode) -> usize {
         instruction
@@ -283,8 +271,8 @@ impl Program {
 
                     self.jump_forward(instruction.jump_size());
 
-                    // Peek should always be Some. It may be an Exit instruction.
-                    return match self.peek().unwrap().instruction {
+                    // next should always be Some. It may be an Exit instruction.
+                    return match self.next().unwrap().instruction {
                         Instruction::Exit => ProgramState::Halt(Some(value)),
                         _ => ProgramState::Output(value),
                     };
