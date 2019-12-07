@@ -198,7 +198,7 @@ impl Program {
     }
 
     /// Returns the next instruction to be executed, or None if no instructions remain.
-    fn next(&mut self) -> Option<InstructionWithMode> {
+    fn next(&self) -> Option<InstructionWithMode> {
         if self.pointer < self.opcodes.len() {
             return Some(InstructionWithMode::from_intcode(self.read(self.pointer)));
         }
