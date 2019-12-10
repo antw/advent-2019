@@ -1,9 +1,7 @@
 /// Oh god, don't look at it!
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::fs;
-use std::hash::{Hash, Hasher};
 use std::iter::FromIterator;
 
 #[derive(Debug, PartialEq, PartialOrd)]
@@ -14,12 +12,6 @@ impl Eq for NonNan {}
 impl Ord for NonNan {
     fn cmp(&self, other: &NonNan) -> Ordering {
         self.partial_cmp(other).unwrap()
-    }
-}
-
-impl Hash for NonNan {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        format!("{}", self.0).hash(state);
     }
 }
 
@@ -57,7 +49,7 @@ impl Point {
 }
 
 /// Stores a point on the map and its computed angle from the station.
-struct PointFromStation<'a> {
+struct PointFromOrigin<'a> {
     point: &'a Point,
     angle: NonNan,
 }
@@ -81,29 +73,54 @@ fn build_map(data: &str) -> Vec<Point> {
     asteroids
 }
 
+/// Given a list of asteroid positions, and an origin asteroid, calculates the angle from the origin
+/// to all the asteroids (except the origin) in the list.
+fn visible_from_location<'a>(
+    asteroids: &'a Vec<Point>,
+    origin: &'a Point,
+) -> Vec<PointFromOrigin<'a>> {
+    asteroids
+        .iter()
+        .filter(|asteroid| *asteroid != origin)
+        .map(|point| {
+            let angle = origin.angle(&point).0;
+
+            // I have to sort by negative angle, ensuring that those directly north come first
+            // (hence -360). I'm not entirely sure why; probably messed something up in
+            // Point::angle?
+            if angle == 0.0 {
+                PointFromOrigin {
+                    point,
+                    angle: NonNan(-360.0),
+                }
+            } else {
+                PointFromOrigin {
+                    point,
+                    angle: NonNan(-angle),
+                }
+            }
+        })
+        .collect::<Vec<PointFromOrigin>>()
+}
+
 fn part_one<'a>(asteroids: &'a Vec<Point>) -> (&'a Point, usize) {
     let mut max = 0;
     let mut best = &asteroids[0];
 
     for asteroid in asteroids {
-        let mut angles = HashMap::new();
-        let mut count = 0;
+        let mut angles = visible_from_location(&asteroids, &asteroid);
 
-        for other in asteroids {
-            if asteroid == other {
-                continue;
-            }
+        // Have to sort in order for dedup_by_key to remove all duplicates.
+        angles.sort_by(|left, right| {
+            left.angle
+                .partial_cmp(&right.angle)
+                .unwrap_or(Ordering::Equal)
+        });
 
-            let angle = asteroid.angle(other);
+        angles.dedup_by_key(|angle| angle.angle);
 
-            if !angles.contains_key(&angle) {
-                angles.insert(angle, true);
-                count += 1;
-            }
-        }
-
-        if count > max {
-            max = count;
+        if angles.len() > max {
+            max = angles.len();
             best = asteroid;
         }
     }
@@ -112,28 +129,7 @@ fn part_one<'a>(asteroids: &'a Vec<Point>) -> (&'a Point, usize) {
 }
 
 fn part_two(asteroids: &Vec<Point>, station: &Point, bet: usize) -> Option<f64> {
-    let mut angles: Vec<PointFromStation> = asteroids
-        .into_iter()
-        .filter(|asteroid| *asteroid != station)
-        .map(|point| {
-            let angle = station.angle(&point).0;
-
-            // I have to sort by negative angle, ensuring that those directly north come first
-            // (hence -360). I'm not entirely sure why; probably messed something up in
-            // Point::angle?
-            if angle == 0.0 {
-                PointFromStation {
-                    point,
-                    angle: NonNan(-360.0),
-                }
-            } else {
-                PointFromStation {
-                    point,
-                    angle: NonNan(-angle),
-                }
-            }
-        })
-        .collect();
+    let mut angles = visible_from_location(asteroids, station);
 
     // Sort first by distance.
     angles.sort_unstable_by_key(|asteroid| station.distance(&asteroid.point));
