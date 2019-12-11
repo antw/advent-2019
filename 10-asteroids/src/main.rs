@@ -29,10 +29,29 @@ impl Point {
     }
 }
 
-/// Stores a point on the map and its computed angle from the station.
-struct PointFromOrigin<'a> {
-    point: &'a Point,
+/// Stores an origin point and target point, and memoizes both the angle and distance from the
+/// origin to the target.
+struct Ray<'a> {
+    origin: &'a Point,
+    target: &'a Point,
     angle: f64,
+    distance: f64,
+}
+
+impl<'a> Ray<'a> {
+    fn new(origin: &'a Point, target: &'a Point) -> Ray<'a> {
+        let angle = origin.angle(&target);
+
+        Ray {
+            origin,
+            target,
+            // I have to sort by negative angle, ensuring that those directly north come first
+            // (hence -360). I'm not entirely sure why; probably messed something up in
+            // Point::angle?
+            angle: if angle == 0.0 { -360.0 } else { -angle },
+            distance: origin.distance(&target),
+        }
+    }
 }
 
 /// Given a path to an asteroid map, reads the map and returns a vector containing all the Points
@@ -56,32 +75,12 @@ fn build_map(data: &str) -> Vec<Point> {
 
 /// Given a list of asteroid positions, and an origin asteroid, calculates the angle from the origin
 /// to all the asteroids (except the origin) in the list.
-fn visible_from_location<'a>(
-    asteroids: &'a Vec<Point>,
-    origin: &'a Point,
-) -> Vec<PointFromOrigin<'a>> {
+fn visible_from_location<'a>(asteroids: &'a Vec<Point>, origin: &'a Point) -> Vec<Ray<'a>> {
     asteroids
         .iter()
         .filter(|asteroid| *asteroid != origin)
-        .map(|point| {
-            let angle = origin.angle(&point);
-
-            // I have to sort by negative angle, ensuring that those directly north come first
-            // (hence -360). I'm not entirely sure why; probably messed something up in
-            // Point::angle?
-            if angle == 0.0 {
-                PointFromOrigin {
-                    point,
-                    angle: -360.0,
-                }
-            } else {
-                PointFromOrigin {
-                    point,
-                    angle: -angle,
-                }
-            }
-        })
-        .collect::<Vec<PointFromOrigin>>()
+        .map(|point| Ray::new(origin, point))
+        .collect::<Vec<Ray>>()
 }
 
 fn part_one<'a>(asteroids: &'a Vec<Point>) -> (&'a Point, usize) {
@@ -114,9 +113,8 @@ fn part_two(asteroids: &Vec<Point>, station: &Point, bet: usize) -> Option<f64> 
 
     // Sort first by distance...
     angles.sort_unstable_by(|left, right| {
-        station
-            .distance(&left.point)
-            .partial_cmp(&station.distance(&right.point))
+        left.distance
+            .partial_cmp(&right.distance)
             .unwrap_or(Ordering::Equal)
     });
 
@@ -136,7 +134,7 @@ fn part_two(asteroids: &Vec<Point>, station: &Point, bet: usize) -> Option<f64> 
         count += 1;
 
         if count == bet {
-            return Some(asteroid.point.x * 100.0 + asteroid.point.y);
+            return Some(asteroid.target.x * 100.0 + asteroid.target.y);
         }
 
         while let Some(next) = angles.front() {
