@@ -4,12 +4,13 @@
 //! initialized with a vector of intcode instructions which are parsed into instructions, executed
 //! by the program.
 //!
-//! The program may be given inputs before or during execution with `[Program::push_input()]`.
+//! The program may be given inputs before or during execution with [`Program::push_input()`].
 //!
-//! The program pauses execution whenever an output is produced; `[Program::run()]` will return
-//! a `[ProgramState::Output(i64)]` allowing you to do what you need with the output, and then
-//! resume execution of the program by calling `[Program::run()]` again. When the program finally
-//! finishes executing, `[ProgramState::Halt(Some(i64))]` is returned.
+//! The program pauses execution whenever an output is produced; [`Program::run()`] will return
+//! a [`ProgramState::Output`] containing an i64 allowing you to do what you need with the output,
+//! and then resume execution of the program by calling [`Program::run()`] again. When the program
+//! finishes executing, [`ProgramState::Halt`] is returned. The `Halt` contains an `Option`: this
+//! will be `Some` if the yielded a value and them immediately finished.
 //!
 //! A typical pattern where you need to act on the outputs of the program during execution is to
 //! use a loop:
@@ -30,7 +31,7 @@
 //! ```
 //!
 //! In the even that you don't need to do anything with the outputs during execution, you may
-//! instead use `[Program::run_capturing_output()]` which will return a `Vec<i64>` containing all
+//! instead use [`Program::run_capturing_output()`] which will return a `Vec<i64>` containing all
 //! of the outputs produced by the program during execution.
 
 use std::collections::VecDeque;
@@ -169,16 +170,16 @@ impl InstructionWithMode {
     }
 }
 
-/// Returned by `[Program::run()]` to indicate the current state of the program. Running the program
+/// Returned by [`Program::run()`] to indicate the current state of the program. Running the program
 /// returns either a value yielded by the program, with the expectation that the program should be
-/// resumed when ready (`[ProgramState::Output]`), or that the program has finished
-/// (`[ProgramState::Halt]`) and should not be resumed.
+/// resumed when ready ([`ProgramState::Output`]), or that the program has finished
+/// ([`ProgramState::Halt`]) and should not be resumed.
 #[derive(Debug, PartialEq)]
 pub enum ProgramState {
     /// Indicates that the program has terminated and will not -- or cannot -- continue.
     Halt(Option<i64>),
     /// Indicates that the program has output a value which may be consumed by another program. The
-    /// program may be resumed by calling `[Program::run]` again.
+    /// program may be resumed by calling [`Program::run`] again.
     Output(i64),
 }
 
@@ -191,7 +192,7 @@ pub struct Program {
 }
 
 impl Program {
-    /// Creates a new `[Program]` using the given opcodes as instructions.
+    /// Creates a new [`Program`] using the given opcodes as instructions.
     pub fn new(opcodes: Vec<i64>) -> Program {
         Program {
             opcodes,
