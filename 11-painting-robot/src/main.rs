@@ -124,12 +124,12 @@ impl PainterRobot {
 
         canvas.0.insert((0, 0), initial_color);
 
-        // The robot starts over a black panel.
+        // Set the color of the starting panel.
         self.program.push_input(initial_color as i64);
 
-        // The program sends two outputs each time the robot moves. The first is the color to be painted
-        // (0 is black, 1 is white), and the second is the direction it will turn (0 is left, 1 is
-        // right).
+        // The program sends two outputs each time the robot moves. The first is the color to be
+        // painted (0 is black, 1 is white), and the second is the direction it will turn (0 is
+        // left, 1 is right).
         loop {
             match self.program.run() {
                 ProgramState::Output(value) => {
@@ -142,13 +142,11 @@ impl PainterRobot {
 
                             let old_dir = direction;
 
-                            // Set the new direction of the robot.
+                            // Set the new direction and position of the robot.
                             direction = old_dir.turn(value == 0);
-
-                            // Set the new position of the robot.
                             position = direction.next_position(&position);
 
-                            // set new position
+                            // Next iteration will be a color.
                             prev_output = None;
 
                             // Tell the robot the color of the panel it is sitting on.
