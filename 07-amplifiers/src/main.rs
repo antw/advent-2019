@@ -35,8 +35,7 @@ fn non_feedback_amplifier_power(intcodes: &Vec<i64>, settings: Vec<i64>) -> i64 
         amplifier.push_input(last_output);
 
         match amplifier.run() {
-            ProgramState::Halt(Some(value)) => last_output = value,
-            ProgramState::Halt(None) => panic!("Unexpected Halt without value in part 1"),
+            ProgramState::Halt => panic!("Unexpected Halt without value in part 1"),
             ProgramState::Output(value) => last_output = value,
         }
     }
@@ -64,15 +63,13 @@ fn feedback_amplifier_power(intcodes: &Vec<i64>, settings: Vec<i64>) -> i64 {
         amplifier.push_input(last_output);
 
         match amplifier.run() {
-            ProgramState::Halt(value) => {
-                last_output = value.unwrap_or(last_output);
-            }
             ProgramState::Output(value) => {
                 last_output = value;
 
                 // A program which produced an output will be resumed later.
                 amplifiers.push_back(amplifier);
             }
+            _ => { /* program halted */ },
         }
     }
 

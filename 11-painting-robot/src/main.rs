@@ -156,11 +156,7 @@ impl PainterRobot {
                         }
                     }
                 }
-                ProgramState::Halt(Some(value)) => {
-                    println!("halting with {}", value);
-                    break;
-                }
-                ProgramState::Halt(None) => break,
+                ProgramState::Halt => break,
             }
         }
 

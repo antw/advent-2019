@@ -63,7 +63,7 @@ mod tests {
         let mut program = Program::new(intcodes);
         let result = program.run();
 
-        assert_eq!(result, ProgramState::Halt(Some(1219070632396864)));
+        assert_eq!(result, ProgramState::Output(1219070632396864));
 
         // Program outputs the middle number.
         let mut intcodes = vec![104, 1125899906842624, 99];
@@ -71,6 +71,6 @@ mod tests {
         let mut program = Program::new(intcodes);
         let result = program.run();
 
-        assert_eq!(result, ProgramState::Halt(Some(1125899906842624)));
+        assert_eq!(result, ProgramState::Output(1125899906842624));
     }
 }

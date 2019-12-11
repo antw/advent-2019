@@ -177,7 +177,7 @@ impl InstructionWithMode {
 #[derive(Debug, PartialEq)]
 pub enum ProgramState {
     /// Indicates that the program has terminated and will not -- or cannot -- continue.
-    Halt(Option<i64>),
+    Halt,
     /// Indicates that the program has output a value which may be consumed by another program. The
     /// program may be resumed by calling [`Program::run`] again.
     Output(i64),
@@ -300,11 +300,7 @@ impl Program {
 
                     self.jump_forward(instruction.jump_size());
 
-                    // next should always be Some. It may be an Exit instruction.
-                    return match self.next().unwrap().instruction {
-                        Instruction::Exit => ProgramState::Halt(Some(value)),
-                        _ => ProgramState::Output(value),
-                    };
+                    return ProgramState::Output(value);
                 }
                 Instruction::JumpIfTrue => {
                     let (condition, value) = self.take_two_params(&instruction);
@@ -352,7 +348,7 @@ impl Program {
             self.jump_forward(instruction.jump_size());
         }
 
-        ProgramState::Halt(None)
+        ProgramState::Halt
     }
 
     /// Runs the program until it halts, returning a vector containing all outputs yielded.
@@ -362,11 +358,7 @@ impl Program {
         loop {
             match self.run() {
                 ProgramState::Output(value) => output.push(value),
-                ProgramState::Halt(Some(value)) => {
-                    output.push(value);
-                    break;
-                }
-                ProgramState::Halt(None) => break,
+                ProgramState::Halt => break,
             }
         }
 
@@ -485,7 +477,7 @@ mod tests {
         program.set(1985, 1337);
         program.relative_base = 2000;
 
-        assert_eq!(program.run(), ProgramState::Halt(Some(1337)));
+        assert_eq!(program.run(), ProgramState::Output(1337));
     }
 
     #[test]
