@@ -47,7 +47,7 @@ fn run_program(intcodes: Vec<usize>) -> Vec<usize> {
             99 => break,
             anything => {
                 eprintln!("Unknown intcode: {}", anything);
-                process:exit(1);
+                process::exit(1);
             }
         }
     }
