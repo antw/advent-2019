@@ -317,8 +317,8 @@ impl Program {
     fn run_capturing_output(&mut self) -> Vec<i64> {
         let mut output = Vec::new();
 
-        while let result = self.run() {
-            match result {
+        loop {
+            match self.run() {
                 ProgramState::Output(value) => output.push(value),
                 ProgramState::Halt(Some(value)) => {
                     output.push(value);
@@ -512,8 +512,8 @@ impl PainterRobot {
         // The program sends two outputs each time the robot moves. The first is the color to be painted
         // (0 is black, 1 is white), and the second is the direction it will turn (0 is left, 1 is
         // right).
-        while let result = self.program.run() {
-            match result {
+        loop {
+            match self.program.run() {
                 ProgramState::Output(value) => {
                     // Robot has moved. Collect the values
                     match prev_output {
