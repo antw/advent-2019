@@ -4,25 +4,6 @@ use std::collections::VecDeque;
 use std::fs;
 use std::iter::FromIterator;
 
-#[derive(Debug, PartialEq, PartialOrd)]
-struct NonNan(f64);
-
-impl Eq for NonNan {}
-
-impl Ord for NonNan {
-    fn cmp(&self, other: &NonNan) -> Ordering {
-        self.partial_cmp(other).unwrap()
-    }
-}
-
-impl Copy for NonNan {}
-
-impl Clone for NonNan {
-    fn clone(&self) -> NonNan {
-        NonNan(self.0)
-    }
-}
-
 /// Described a position on the map, occupied by an asteroid.
 #[derive(Debug, PartialEq)]
 struct Point {
@@ -31,19 +12,19 @@ struct Point {
 }
 
 impl Point {
-    fn distance(&self, other: &Point) -> NonNan {
-        NonNan(((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt())
+    fn distance(&self, other: &Point) -> f64 {
+        ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt()
     }
 
-    fn angle(&self, other: &Point) -> NonNan {
+    fn angle(&self, other: &Point) -> f64 {
         let x_distance = self.x - other.x;
         let y_distance = self.y - other.y;
         let angle = x_distance.atan2(y_distance) * 180.0 / std::f64::consts::PI;
 
         if angle < 0.0 {
-            NonNan(angle + 360.0)
+            angle + 360.0
         } else {
-            NonNan(angle)
+            angle
         }
     }
 }
@@ -51,7 +32,7 @@ impl Point {
 /// Stores a point on the map and its computed angle from the station.
 struct PointFromOrigin<'a> {
     point: &'a Point,
-    angle: NonNan,
+    angle: f64,
 }
 
 /// Given a path to an asteroid map, reads the map and returns a vector containing all the Points
@@ -83,7 +64,7 @@ fn visible_from_location<'a>(
         .iter()
         .filter(|asteroid| *asteroid != origin)
         .map(|point| {
-            let angle = origin.angle(&point).0;
+            let angle = origin.angle(&point);
 
             // I have to sort by negative angle, ensuring that those directly north come first
             // (hence -360). I'm not entirely sure why; probably messed something up in
@@ -91,12 +72,12 @@ fn visible_from_location<'a>(
             if angle == 0.0 {
                 PointFromOrigin {
                     point,
-                    angle: NonNan(-360.0),
+                    angle: -360.0,
                 }
             } else {
                 PointFromOrigin {
                     point,
-                    angle: NonNan(-angle),
+                    angle: -angle,
                 }
             }
         })
@@ -131,12 +112,21 @@ fn part_one<'a>(asteroids: &'a Vec<Point>) -> (&'a Point, usize) {
 fn part_two(asteroids: &Vec<Point>, station: &Point, bet: usize) -> Option<f64> {
     let mut angles = visible_from_location(asteroids, station);
 
-    // Sort first by distance.
-    angles.sort_unstable_by_key(|asteroid| station.distance(&asteroid.point));
+    // Sort first by distance...
+    angles.sort_unstable_by(|left, right| {
+        station
+            .distance(&left.point)
+            .partial_cmp(&station.distance(&right.point))
+            .unwrap_or(Ordering::Equal)
+    });
 
-    // Then by angle. This gives us a vector where asteroids are sorted first by angle, and when
+    // ...then by angle. This gives us a vector where asteroids are sorted first by angle, and when
     // any have the same angle, then by distance.
-    angles.sort_by_key(|asteroid| asteroid.angle);
+    angles.sort_by(|left, right| {
+        left.angle
+            .partial_cmp(&right.angle)
+            .unwrap_or(Ordering::Equal)
+    });
 
     let mut angles = VecDeque::from_iter(&angles);
     let mut count = 0;
