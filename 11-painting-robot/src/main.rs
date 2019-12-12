@@ -122,8 +122,6 @@ impl PainterRobot {
         // Map contains a list of coordinates visited by the robot, and the color painted.
         let mut canvas = Canvas::new();
 
-        canvas.0.insert((0, 0), initial_color);
-
         // Set the color of the starting panel.
         self.program.push_input(initial_color as i64);
 
@@ -140,10 +138,8 @@ impl PainterRobot {
                             // We have two values. The robot is ready to move.
                             canvas.0.insert(position, color as usize);
 
-                            let old_dir = direction;
-
                             // Set the new direction and position of the robot.
-                            direction = old_dir.turn(value == 0);
+                            direction = direction.turn(value == 0);
                             position = direction.next_position(&position);
 
                             // Next iteration will be a color.
