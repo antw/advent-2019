@@ -146,7 +146,9 @@ impl PainterRobot {
                             prev_output = None;
 
                             // Tell the robot the color of the panel it is sitting on.
-                            self.program.push_input(value);
+                            self.program.push_input(
+                                (*canvas.0.get(&position).unwrap_or(&0)) as i64
+                            );
                         }
                     }
                 }
@@ -172,4 +174,37 @@ fn main() {
     println!("Part two:");
 
     println!("{}", PainterRobot::new(Program::new(intcodes)).paint(1));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_part_one() {
+        let intcodes = read_intcodes("data/intcodes.txt");
+        let touched = PainterRobot::new(Program::new(intcodes)).paint(0).0.len();
+
+        assert_eq!(touched, 2088);
+    }
+
+    #[test]
+    fn test_part_two() {
+        let intcodes = read_intcodes("data/intcodes.txt");
+
+        let canvas = PainterRobot::new(Program::new(intcodes)).paint(1);
+        let printed = format!("{}", canvas);
+
+        assert_eq!(
+            printed,
+            concat!(
+                "  #     #   # # #       # #       # #     # # # #   #           # #     # # #         \n",
+                "  #     #   #     #   #     #   #     #   #         #         #     #   #     #       \n",
+                "  #     #   #     #   #         #     #   # # #     #         #         #     #       \n",
+                "  #     #   # # #     #         # # # #   #         #         #         # # #         \n",
+                "  #     #   #   #     #     #   #     #   #         #         #     #   #             \n",
+                "    # #     #     #     # #     #     #   #         # # # #     # #     #             \n",
+            )
+        );
+    }
 }
