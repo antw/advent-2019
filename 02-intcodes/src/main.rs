@@ -56,7 +56,7 @@ fn run_program(intcodes: Vec<usize>) -> Vec<usize> {
 }
 
 fn main() {
-    let mut intcodes = read_intcodes("intcodes.txt");
+    let intcodes = read_intcodes("intcodes.txt");
 
     for noun in 0..100 {
         for verb in 0..100 {

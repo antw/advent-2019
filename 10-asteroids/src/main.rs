@@ -29,10 +29,8 @@ impl Point {
     }
 }
 
-/// Stores an origin point and target point, and memoizes both the angle and distance from the
-/// origin to the target.
+/// Stores an target point, and memoizes both the angle and distance from an origin to the target.
 struct Ray<'a> {
-    origin: &'a Point,
     target: &'a Point,
     angle: f64,
     distance: f64,
@@ -43,7 +41,6 @@ impl<'a> Ray<'a> {
         let angle = origin.angle(&target);
 
         Ray {
-            origin,
             target,
             // I have to sort by negative angle, ensuring that those directly north come first
             // (hence -360). I'm not entirely sure why; probably messed something up in

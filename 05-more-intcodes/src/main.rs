@@ -260,7 +260,7 @@ fn run_program(intcodes: Vec<i64>) -> Vec<i64> {
                 let mut input = String::new();
 
                 print!("Enter number to use as input: ");
-                io::stdout().flush();
+                io::stdout().flush().expect("Expected to flush output.");
 
                 io::stdin()
                     .read_line(&mut input)

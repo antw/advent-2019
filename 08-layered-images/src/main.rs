@@ -22,7 +22,7 @@ fn ones_times_twos(layer: &Vec<u8>) -> i64 {
 /// value in a higher layer will obscure any value from a lower layer.
 fn compose_image_from_layers(pixels: &Vec<u8>, pixels_per_layer: usize) -> Vec<u8> {
     let mut image = vec![2; pixels_per_layer];
-    let mut layers = pixels.chunks(pixels_per_layer);
+    let layers = pixels.chunks(pixels_per_layer);
 
     for layer in layers {
         for (index, pixel) in layer.iter().enumerate() {
@@ -52,9 +52,9 @@ fn read_data(path: &str) -> Result<Vec<u8>, std::io::Error> {
 /// Receives pixel data and the number of pixels per layer, finds the layer with the least zeros and
 /// multiplies the number of ones by twos in that layer. Returns None if the pixel data is empty.
 fn part_one(pixels: &Vec<u8>, pixels_per_layer: usize) -> Option<i64> {
-    let mut layers = pixels.chunks(pixels_per_layer);
+    let layers = pixels.chunks(pixels_per_layer);
 
-    let mut least_zeros = layers.min_by_key(|layer| {
+    let least_zeros = layers.min_by_key(|layer| {
         let zeros: Vec<&u8> = layer.iter().filter(|pixel| **pixel == 0u8).collect();
         zeros.len()
     });
@@ -74,7 +74,7 @@ fn part_one(pixels: &Vec<u8>, pixels_per_layer: usize) -> Option<i64> {
 /// character is left as whitespace.
 fn part_two(pixels: &Vec<u8>, pixels_per_row: usize, pixels_per_layer: usize) -> String {
     let image = compose_image_from_layers(pixels, pixels_per_layer);
-    let mut rows = image.chunks(pixels_per_row);
+    let rows = image.chunks(pixels_per_row);
 
     let mut rendered =
         String::with_capacity(pixels_per_layer * 2 + pixels_per_layer / pixels_per_row + 1);

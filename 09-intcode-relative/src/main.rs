@@ -1,4 +1,3 @@
-use std::collections::VecDeque;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
@@ -49,7 +48,7 @@ mod tests {
     #[test]
     fn test_day_9() {
         // Program outputs a copy of itself.
-        let mut intcodes = vec![
+        let intcodes = vec![
             109, 1, 204, -1, 1001, 100, 1, 100, 1008, 100, 16, 101, 1006, 101, 0, 99,
         ];
 
@@ -58,7 +57,7 @@ mod tests {
         assert_eq!(program.run_capturing_output(), intcodes);
 
         // Program outputs a 16-digit number.
-        let mut intcodes = vec![1102, 34915192, 34915192, 7, 4, 7, 99, 0];
+        let intcodes = vec![1102, 34915192, 34915192, 7, 4, 7, 99, 0];
 
         let mut program = Program::new(intcodes);
         let result = program.run();
@@ -66,7 +65,7 @@ mod tests {
         assert_eq!(result, ProgramState::Output(1219070632396864));
 
         // Program outputs the middle number.
-        let mut intcodes = vec![104, 1125899906842624, 99];
+        let intcodes = vec![104, 1125899906842624, 99];
 
         let mut program = Program::new(intcodes);
         let result = program.run();
