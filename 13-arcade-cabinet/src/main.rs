@@ -14,8 +14,8 @@ enum TileType {
     Ball,
 }
 
-impl TileType {
-    fn from_i64(digit: i64) -> TileType {
+impl From<i64> for TileType {
+    fn from(digit: i64) -> Self {
         match digit {
             0 => TileType::Blank,
             1 => TileType::Wall,
@@ -65,7 +65,7 @@ impl Arcade {
                                 (-1, 0) => score = value,
                                 _ => {
                                     // We have x, y, and tile type values.
-                                    let tile = TileType::from_i64(value);
+                                    let tile = TileType::from(value);
 
                                     if tile == TileType::Paddle {
                                         paddle_pos = x;
