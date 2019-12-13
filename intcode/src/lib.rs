@@ -366,6 +366,34 @@ impl Program {
     }
 }
 
+/// Takes ownership of a program and permits iteration through each of its outputs until the program
+/// halts.
+pub struct ProgramIntoIterator {
+    program: Program,
+}
+
+impl Iterator for ProgramIntoIterator {
+    type Item = i64;
+
+    /// Runs the program until it yields a value, or halts. Next will reutrn Some(i64) when the
+    /// program produced a value, and None otheriwse.
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.program.run() {
+            ProgramState::Output(value) => Some(value),
+            ProgramState::Halt => None,
+        }
+    }
+}
+
+impl IntoIterator for Program {
+    type Item = i64;
+    type IntoIter = ProgramIntoIterator;
+
+    fn into_iter(self) -> Self::IntoIter {
+        ProgramIntoIterator { program: self }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -486,5 +514,31 @@ mod tests {
         program.run();
 
         assert_eq!(program.opcodes, vec![1002, 4, 3, 4, 99]);
+    }
+
+    #[test]
+    fn test_program_into_iter() {
+        // output value at 1 = 1
+        // output value at 4 = 3
+        // output value at 7 = 2
+        let program = Program::new(vec![4, 1, 4, 3, 4, 7, 99, 2]);
+        let mut iter = program.into_iter();
+
+        assert_eq!(iter.next(), Some(1));
+        assert_eq!(iter.next(), Some(3));
+        assert_eq!(iter.next(), Some(2));
+        assert_eq!(iter.next(), None);
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_program_run_capturing_output() {
+        // output value at 1 = 1
+        // output value at 4 = 3
+        // output value at 7 = 2
+        let mut program = Program::new(vec![4, 1, 4, 3, 4, 7, 99, 2]);
+        let values = program.run_capturing_output();
+
+        assert_eq!(values, vec![1, 3, 2]);
     }
 }
