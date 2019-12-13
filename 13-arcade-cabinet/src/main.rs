@@ -61,38 +61,37 @@ impl Arcade {
                         (None, None) => x_pos = Some(value),
                         (Some(_), None) => y_pos = Some(value),
                         (Some(x), Some(y)) => {
-                            match (x, y) {
-                                (-1, 0) => score = value,
-                                _ => {
-                                    // We have x, y, and tile type values.
-                                    let tile = TileType::from(value);
-
-                                    if tile == TileType::Paddle {
-                                        paddle_pos = x;
-                                    } else if tile == TileType::Ball {
-                                        ball = Some(x);
-                                    }
-
-                                    if let Some(ball_pos) = ball {
-                                        // Provide joystick input to move the paddle underneath the
-                                        // ball.
-                                        if ball_pos < paddle_pos {
-                                            self.program.push_input(-1);
-                                        } else if ball_pos > paddle_pos {
-                                            self.program.push_input(1);
-                                        } else {
-                                            self.program.push_input(0);
-                                        }
-
-                                        ball = None;
-                                    }
-
-                                    self.canvas.insert((x, y), tile);
-                                }
-                            }
-
                             x_pos = None;
                             y_pos = None;
+
+                            if x == -1 && y == 0 {
+                                score = value;
+                                continue;
+                            }
+
+                            // We have x, y, and tile type values.
+                            let tile = TileType::from(value);
+
+                            if tile == TileType::Paddle {
+                                paddle_pos = x;
+                            } else if tile == TileType::Ball {
+                                ball = Some(x);
+                            }
+
+                            if let Some(ball_pos) = ball {
+                                // Provide joystick input to move the paddle underneath the ball.
+                                if ball_pos < paddle_pos {
+                                    self.program.push_input(-1);
+                                } else if ball_pos > paddle_pos {
+                                    self.program.push_input(1);
+                                } else {
+                                    self.program.push_input(0);
+                                }
+
+                                ball = None;
+                            }
+
+                            self.canvas.insert((x, y), tile);
                         }
                         _ => unreachable!(),
                     }
