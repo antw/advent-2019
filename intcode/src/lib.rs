@@ -35,6 +35,8 @@
 //! of the outputs produced by the program during execution.
 
 use std::collections::VecDeque;
+use std::fs::File;
+use std::io::{self, BufRead, BufReader};
 
 /// Parameters may be retrieved from the program in one of two ways.
 ///
@@ -200,6 +202,24 @@ impl Program {
             inputs: VecDeque::new(),
             relative_base: 0,
         }
+    }
+
+    /// Loads the program from a file. The file should consist of a single line of comma-separated
+    /// intcodes with an optional newline.
+    pub fn from_file(path: &str) -> Result<Program, io::Error> {
+        let file = File::open(path)?;
+        let mut reader = BufReader::new(file);
+
+        let mut first_line = String::new();
+        reader.read_line(&mut first_line).unwrap();
+
+        Ok(Program::new(
+            first_line
+                .trim()
+                .split(",")
+                .map(|intcode| intcode.parse::<i64>().unwrap())
+                .collect(),
+        ))
     }
 
     /// Jumps to the specified memory `address`.
@@ -540,5 +560,18 @@ mod tests {
         let values = program.run_capturing_output();
 
         assert_eq!(values, vec![1, 3, 2]);
+    }
+
+    #[test]
+    fn test_program_from_file() {
+        assert!(Program::from_file("nope.txt").is_err());
+
+        let program = Program::from_file("examples/example.txt");
+        assert!(program.is_ok());
+
+        if let Ok(mut program) = program {
+            program.run();
+            assert_eq!(program.opcodes, vec![1002, 4, 3, 4, 99]);
+        }
     }
 }

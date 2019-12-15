@@ -1,6 +1,5 @@
 use std::collections::{HashMap, HashSet, VecDeque};
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io;
 
 extern crate rand;
 
@@ -226,33 +225,17 @@ fn part_two(program: Program) -> usize {
     map.deepest_path(oxy_pos)
 }
 
-/// Provided with a path to a file containing an intcode program, reads the file and returns a
-/// vector of the intcodes.
-fn read_intcodes(path: &str) -> Vec<i64> {
-    let file = File::open(path).unwrap();
-    let mut reader = BufReader::new(file);
-
-    let mut first_line = String::new();
-    reader.read_line(&mut first_line).unwrap();
-
-    first_line
-        .trim()
-        .split(",")
-        .map(|intcode| intcode.parse::<i64>().unwrap())
-        .collect()
-}
-
-fn main() {
-    let intcodes = read_intcodes("data/intcodes.txt");
-
-    let shortest_path = part_one(Program::new(intcodes.clone()))
+fn main() -> Result<(), io::Error> {
+    let shortest_path = part_one(Program::from_file("data/intcodes.txt")?)
         .expect("Expected to find path from the oxygen system to (0, 0)");
 
     println!("Part one: {}", shortest_path);
 
-    let deepest_path = part_two(Program::new(intcodes));
+    let deepest_path = part_two(Program::from_file("data/intcodes.txt")?);
 
     println!("Part two: {}", deepest_path);
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -260,18 +243,22 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_part_one() {
-        let intcodes = read_intcodes("data/intcodes.txt");
-        let shortest_path = part_one(Program::new(intcodes.clone()));
+    fn test_part_one() -> Result<(), io::Error> {
+        assert_eq!(
+            part_one(Program::from_file("data/intcodes.txt")?),
+            Some(248)
+        );
 
-        assert_eq!(shortest_path, Some(248));
+        Ok(())
     }
 
     #[test]
-    fn test_part_two() {
-        let intcodes = read_intcodes("data/intcodes.txt");
-        let deepest_path = part_two(Program::new(intcodes.clone()));
+    fn test_part_two() -> Result<(), io::Error> {
+        assert_eq!(
+            part_two(Program::from_file("data/intcodes.txt")?),
+            382
+        );
 
-        assert_eq!(deepest_path, 382);
+        Ok(())
     }
 }
