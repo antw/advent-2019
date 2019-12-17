@@ -38,6 +38,21 @@ use std::collections::VecDeque;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 
+/// Provided a path to a file on disk, loads the intcodes contained within and returns a vector.
+pub fn load_intcodes_from_file(path: &str) -> Result<Vec<i64>, io::Error> {
+    let file = File::open(path)?;
+    let mut reader = BufReader::new(file);
+
+    let mut first_line = String::new();
+    reader.read_line(&mut first_line).unwrap();
+
+    Ok(first_line
+        .trim()
+        .split(",")
+        .map(|intcode| intcode.parse::<i64>().unwrap())
+        .collect())
+}
+
 /// Parameters may be retrieved from the program in one of two ways.
 ///
 /// In `Position` mode, the instruction will read the value at the program address. If the program
@@ -207,19 +222,7 @@ impl Program {
     /// Loads the program from a file. The file should consist of a single line of comma-separated
     /// intcodes with an optional newline.
     pub fn from_file(path: &str) -> Result<Program, io::Error> {
-        let file = File::open(path)?;
-        let mut reader = BufReader::new(file);
-
-        let mut first_line = String::new();
-        reader.read_line(&mut first_line).unwrap();
-
-        Ok(Program::new(
-            first_line
-                .trim()
-                .split(",")
-                .map(|intcode| intcode.parse::<i64>().unwrap())
-                .collect(),
-        ))
+        Ok(Program::new(load_intcodes_from_file(path)?))
     }
 
     /// Jumps to the specified memory `address`.
@@ -560,6 +563,18 @@ mod tests {
         let values = program.run_capturing_output();
 
         assert_eq!(values, vec![1, 3, 2]);
+    }
+
+    #[test]
+    fn test_load_intcodes_from_file() -> Result<(), io::Error> {
+        assert!(load_intcodes_from_file("nope.txt").is_err());
+
+        assert_eq!(
+            load_intcodes_from_file("examples/example.txt")?,
+            vec![1002, 4, 3, 4, 33]
+        );
+
+        Ok(())
     }
 
     #[test]
