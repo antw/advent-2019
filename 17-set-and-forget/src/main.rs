@@ -154,13 +154,10 @@ fn part_two(program: Program) -> i64 {
     program.push_input('n' as i64);
     program.push_input('\n' as i64);
 
-    let mut dust = 0;
-
-    while let ProgramState::Output(value) = program.run() {
-        dust = value;
-    }
-
-    dust
+    program
+        .into_iter()
+        .last()
+        .expect("Expected robot to return dust quantity")
 }
 
 fn main() -> Result<(), io::Error> {
