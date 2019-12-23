@@ -36,6 +36,7 @@ fn non_feedback_amplifier_power(intcodes: &Vec<i64>, settings: Vec<i64>) -> i64 
 
         match amplifier.run() {
             ProgramState::Halt => panic!("Unexpected Halt without value in part 1"),
+            ProgramState::Wait => panic!("No input available"),
             ProgramState::Output(value) => last_output = value,
         }
     }

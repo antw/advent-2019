@@ -96,6 +96,7 @@ impl Arcade {
                         _ => unreachable!(),
                     }
                 }
+                ProgramState::Wait => panic!("No input available"),
                 ProgramState::Halt => break,
             }
         }

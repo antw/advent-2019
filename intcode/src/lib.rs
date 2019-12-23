@@ -198,6 +198,8 @@ pub enum ProgramState {
     /// Indicates that the program has output a value which may be consumed by another program. The
     /// program may be resumed by calling [`Program::run`] again.
     Output(i64),
+    /// The program requires an input value, but none are available.
+    Wait,
 }
 
 /// The opcode program!
@@ -311,10 +313,16 @@ impl Program {
                 Instruction::Input => {
                     let save_to = self.take_one_param(&instruction);
 
-                    match self.inputs.pop_front() {
-                        Some(value) => self.set(save_to, value),
-                        None => panic!("No input available"),
-                    }
+                    let value = match self.inputs.pop_front() {
+                        Some(value) => value,
+                        None => {
+                            // Stops execution awaiting a program input. Calling run will begin
+                            // again from the Input instruction.
+                            return ProgramState::Wait;
+                        }
+                    };
+
+                    self.set(save_to, value);
                 }
                 Instruction::Output => {
                     // Can't use take_one_param as it returns a usize, which will be invalid if the
@@ -381,6 +389,7 @@ impl Program {
         loop {
             match self.run() {
                 ProgramState::Output(value) => output.push(value),
+                ProgramState::Wait => panic!("Cannot wait on input with run_capturing_output"),
                 ProgramState::Halt => break,
             }
         }
@@ -403,6 +412,7 @@ impl Iterator for ProgramIntoIterator {
     fn next(&mut self) -> Option<Self::Item> {
         match self.program.run() {
             ProgramState::Output(value) => Some(value),
+            ProgramState::Wait => panic!("Cannot wait on input in a Iterator"),
             ProgramState::Halt => None,
         }
     }

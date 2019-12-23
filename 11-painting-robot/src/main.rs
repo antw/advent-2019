@@ -152,6 +152,7 @@ impl PainterRobot {
                         }
                     }
                 }
+                ProgramState::Wait => panic!("No input available"),
                 ProgramState::Halt => break,
             }
         }

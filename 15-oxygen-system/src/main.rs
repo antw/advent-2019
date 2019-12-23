@@ -195,6 +195,7 @@ fn build_map(program: Program) -> (Canvas, Pos) {
                 }
                 _ => unreachable!(),
             },
+            ProgramState::Wait => panic!("No input available"),
             ProgramState::Halt => break,
         }
 
